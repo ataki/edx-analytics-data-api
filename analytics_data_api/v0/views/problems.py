@@ -4,10 +4,12 @@ API methods for module level data.
 
 from itertools import groupby
 
+from django.db import OperationalError
 from rest_framework import generics
 
 from analytics_data_api.v0.models import ProblemResponseAnswerDistribution, ProblemFirstLastResponseAnswerDistribution
-from analytics_data_api.v0.serializers import ConsolidatedAnswerDistributionSerializer, ConsolidatedFirstLastAnswerDistributionSerializer
+from analytics_data_api.v0.serializers import ConsolidatedAnswerDistributionSerializer, \
+    ConsolidatedFirstLastAnswerDistributionSerializer
 from analytics_data_api.v0.models import GradeDistribution
 from analytics_data_api.v0.serializers import GradeDistributionSerializer
 from analytics_data_api.v0.models import SequentialOpenDistribution
@@ -54,9 +56,10 @@ class ProblemResponseAnswerDistributionView(generics.ListAPIView):
 
         try:
             queryset = list(ProblemResponseAnswerDistribution.objects.filter(module_id=problem_id).order_by('part_id'))
-        except:
+        except OperationalError:
             self.serializer_class = ConsolidatedFirstLastAnswerDistributionSerializer
-            queryset = list(ProblemFirstLastResponseAnswerDistribution.objects.filter(module_id=problem_id).order_by('part_id'))
+            queryset = list(ProblemFirstLastResponseAnswerDistribution.objects.filter(
+                module_id=problem_id).order_by('part_id'))
 
         consolidated_rows = []
 

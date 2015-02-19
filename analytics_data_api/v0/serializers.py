@@ -106,7 +106,10 @@ class ProblemFirstLastResponseAnswerDistributionSerializer(ProblemResponseAnswer
 
     class Meta(ProblemResponseAnswerDistributionSerializer.Meta):
         model = models.ProblemFirstLastResponseAnswerDistribution
-        fields = ProblemResponseAnswerDistributionSerializer.Meta.fields + ('first_response_count', 'final_response_count')
+        fields = ProblemResponseAnswerDistributionSerializer.Meta.fields + (
+            'first_response_count',
+            'final_response_count',
+        )
         fields = tuple([field for field in fields if field != 'count'])
 
 

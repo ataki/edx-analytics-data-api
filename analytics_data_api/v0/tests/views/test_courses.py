@@ -607,12 +607,12 @@ class CourseProblemsListViewTests(DemoCourseMixin, TestCaseWithAuthentication):
         created = datetime.datetime.utcnow()
         alt_created = created + datetime.timedelta(seconds=2)
 
-        o1 = G(models.ProblemFirstLastResponseAnswerDistribution, course_id=self.course_id, module_id=module_id, correct=True,
-               final_response_count=100, created=created)
+        o1 = G(models.ProblemFirstLastResponseAnswerDistribution, course_id=self.course_id, module_id=module_id,
+               correct=True, final_response_count=100, created=created)
         o2 = G(models.ProblemFirstLastResponseAnswerDistribution, course_id=self.course_id, module_id=alt_module_id,
                correct=True, final_response_count=100, created=created)
-        o3 = G(models.ProblemFirstLastResponseAnswerDistribution, course_id=self.course_id, module_id=module_id, correct=False,
-               final_response_count=200, created=alt_created)
+        o3 = G(models.ProblemFirstLastResponseAnswerDistribution, course_id=self.course_id, module_id=module_id,
+               correct=False, final_response_count=200, created=alt_created)
 
         expected = [
             {
