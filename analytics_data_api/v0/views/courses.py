@@ -4,7 +4,7 @@ import warnings
 
 from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
-from django.db import connections
+from django.db import connections, OperationalError
 from django.db.models import Max
 from django.http import Http404
 from django.utils.timezone import make_aware, utc
@@ -653,7 +653,11 @@ GROUP BY module_id;
                 # http://code.openark.org/blog/mysql/those-oversized-undersized-variables-defaults.
                 cursor.execute("SET @@group_concat_max_len = @@max_allowed_packet;")
 
-            cursor.execute(sql, [self.course_id])
+            try:
+                cursor.execute(sql, [self.course_id])
+            except OperationalError:
+                cursor.execute(sql.replace('count', 'final_response_count'), [self.course_id])
+
             rows = dictfetchall(cursor)
 
         for row in rows:

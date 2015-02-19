@@ -3,6 +3,8 @@ from collections import defaultdict
 from django.db.models import Q
 from rest_framework.authtoken.models import Token
 
+from analytics_data_api.v0.models import ProblemResponseAnswerDistribution
+
 
 def delete_user_auth_token(username):
     """
@@ -77,7 +79,11 @@ def consolidate_answers(problem):
                 consolidated_answer.variant = None
                 consolidated_answer.consolidated_variant = True
             else:
-                consolidated_answer.count += answer.count
+                if type(consolidated_answer) == ProblemResponseAnswerDistribution:
+                    consolidated_answer.count += answer.count
+                else:
+                    consolidated_answer.first_response_count += answer.first_response_count
+                    consolidated_answer.final_response_count += answer.final_response_count
 
         consolidated_answers.append(consolidated_answer)
 
