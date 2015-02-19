@@ -9,7 +9,7 @@ from django_dynamic_fixture import G
 import json
 
 from analytics_data_api.v0 import models
-from analytics_data_api.v0.serializers import ProblemFirstLastResponseAnswerDistributionSerializer, \
+from analytics_data_api.v0.serializers import ProblemFirstFinalResponseAnswerDistributionSerializer, \
     GradeDistributionSerializer, SequentialOpenDistributionSerializer
 from analyticsdataserver.tests import TestCaseWithAuthentication
 
@@ -32,7 +32,7 @@ class AnswerDistributionTests(TestCaseWithAuthentication):
         cls.question_text = 'Question Text'
 
         cls.ad1 = G(
-            models.ProblemFirstLastResponseAnswerDistribution,
+            models.ProblemFirstFinalResponseAnswerDistribution,
             course_id=cls.course_id,
             module_id=cls.module_id1,
             part_id=cls.part_id,
@@ -46,7 +46,7 @@ class AnswerDistributionTests(TestCaseWithAuthentication):
             final_reponse_count=3,
         )
         cls.ad2 = G(
-            models.ProblemFirstLastResponseAnswerDistribution,
+            models.ProblemFirstFinalResponseAnswerDistribution,
             course_id=cls.course_id,
             module_id=cls.module_id1,
             part_id=cls.part_id,
@@ -60,13 +60,13 @@ class AnswerDistributionTests(TestCaseWithAuthentication):
             final_response_count=2,
         )
         cls.ad3 = G(
-            models.ProblemFirstLastResponseAnswerDistribution,
+            models.ProblemFirstFinalResponseAnswerDistribution,
             course_id=cls.course_id,
             module_id=cls.module_id1,
             part_id=cls.part_id,
         )
         cls.ad4 = G(
-            models.ProblemFirstLastResponseAnswerDistribution,
+            models.ProblemFirstFinalResponseAnswerDistribution,
             course_id=cls.course_id,
             module_id=cls.module_id2,
             part_id=cls.part_id,
@@ -74,7 +74,7 @@ class AnswerDistributionTests(TestCaseWithAuthentication):
             correct=True,
         )
         cls.ad5 = G(
-            models.ProblemFirstLastResponseAnswerDistribution,
+            models.ProblemFirstFinalResponseAnswerDistribution,
             course_id=cls.course_id,
             module_id=cls.module_id2,
             part_id=cls.part_id,
@@ -82,7 +82,7 @@ class AnswerDistributionTests(TestCaseWithAuthentication):
             correct=True
         )
         cls.ad6 = G(
-            models.ProblemFirstLastResponseAnswerDistribution,
+            models.ProblemFirstFinalResponseAnswerDistribution,
             course_id=cls.course_id,
             module_id=cls.module_id2,
             part_id=cls.part_id,
@@ -95,8 +95,8 @@ class AnswerDistributionTests(TestCaseWithAuthentication):
         response = self.authenticated_get('/api/v0/problems/%s%s' % (self.module_id2, self.path))
         self.assertEquals(response.status_code, 200)
 
-        expected_data = models.ProblemFirstLastResponseAnswerDistribution.objects.filter(module_id=self.module_id2)
-        expected_data = [ProblemFirstLastResponseAnswerDistributionSerializer(answer).data for answer in expected_data]
+        expected_data = models.ProblemFirstFinalResponseAnswerDistribution.objects.filter(module_id=self.module_id2)
+        expected_data = [ProblemFirstFinalResponseAnswerDistributionSerializer(answer).data for answer in expected_data]
 
         for answer in expected_data:
             answer['consolidated_variant'] = False
@@ -113,8 +113,8 @@ class AnswerDistributionTests(TestCaseWithAuthentication):
         self.assertEquals(response.status_code, 200)
 
         expected_data = [
-            ProblemFirstLastResponseAnswerDistributionSerializer(self.ad1).data,
-            ProblemFirstLastResponseAnswerDistributionSerializer(self.ad3).data,
+            ProblemFirstFinalResponseAnswerDistributionSerializer(self.ad1).data,
+            ProblemFirstFinalResponseAnswerDistributionSerializer(self.ad3).data,
         ]
 
         expected_data[0]['first_response_count'] += self.ad2.first_response_count

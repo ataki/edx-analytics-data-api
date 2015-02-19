@@ -73,17 +73,17 @@ def consolidate_answers(problem):
             continue
 
         for answer in answers:
-            if not consolidated_answer:
-                consolidated_answer = answer
-
-                consolidated_answer.variant = None
-                consolidated_answer.consolidated_variant = True
-            else:
+            if consolidated_answer:
                 if type(consolidated_answer) == ProblemResponseAnswerDistribution:
                     consolidated_answer.count += answer.count
                 else:
                     consolidated_answer.first_response_count += answer.first_response_count
                     consolidated_answer.final_response_count += answer.final_response_count
+            else:
+                consolidated_answer = answer
+
+                consolidated_answer.variant = None
+                consolidated_answer.consolidated_variant = True
 
         consolidated_answers.append(consolidated_answer)
 

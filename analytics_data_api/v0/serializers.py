@@ -99,13 +99,13 @@ class ConsolidatedAnswerDistributionSerializer(ProblemResponseAnswerDistribution
         return distribution
 
 
-class ProblemFirstLastResponseAnswerDistributionSerializer(ProblemResponseAnswerDistributionSerializer):
+class ProblemFirstFinalResponseAnswerDistributionSerializer(ProblemResponseAnswerDistributionSerializer):
     """
     Serializer for answer distribution table including counts of first and last response values.
     """
 
     class Meta(ProblemResponseAnswerDistributionSerializer.Meta):
-        model = models.ProblemFirstLastResponseAnswerDistribution
+        model = models.ProblemFirstFinalResponseAnswerDistribution
         fields = ProblemResponseAnswerDistributionSerializer.Meta.fields + (
             'first_response_count',
             'final_response_count',
@@ -113,15 +113,15 @@ class ProblemFirstLastResponseAnswerDistributionSerializer(ProblemResponseAnswer
         fields = tuple([field for field in fields if field != 'count'])
 
 
-class ConsolidatedFirstLastAnswerDistributionSerializer(ProblemFirstLastResponseAnswerDistributionSerializer):
+class ConsolidatedFirstFinalAnswerDistributionSerializer(ProblemFirstFinalResponseAnswerDistributionSerializer):
     """
     Serializer for consolidated answer distributions including first attempt counts.
     """
 
     consolidated_variant = serializers.BooleanField()
 
-    class Meta(ProblemFirstLastResponseAnswerDistributionSerializer.Meta):
-        fields = ProblemFirstLastResponseAnswerDistributionSerializer.Meta.fields + ('consolidated_variant',)
+    class Meta(ProblemFirstFinalResponseAnswerDistributionSerializer.Meta):
+        fields = ProblemFirstFinalResponseAnswerDistributionSerializer.Meta.fields + ('consolidated_variant',)
 
     # pylint: disable=super-on-old-class
     def restore_object(self, attrs, instance=None):
@@ -130,7 +130,7 @@ class ConsolidatedFirstLastAnswerDistributionSerializer(ProblemFirstLastResponse
         """
 
         consolidated_variant = attrs.pop('consolidated_variant', None)
-        distribution = super(ConsolidatedFirstLastAnswerDistributionSerializer, self).restore_object(attrs, instance)
+        distribution = super(ConsolidatedFirstFinalAnswerDistributionSerializer, self).restore_object(attrs, instance)
         distribution.consolidated_variant = consolidated_variant
 
         return distribution

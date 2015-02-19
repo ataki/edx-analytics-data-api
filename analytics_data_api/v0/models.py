@@ -121,8 +121,8 @@ class ProblemResponseAnswerDistribution(BaseProblemResponseAnswerDistribution):
     count = models.IntegerField()
 
 
-class ProblemFirstLastResponseAnswerDistribution(BaseProblemResponseAnswerDistribution):
-    """ Updated model for answer_distribution table including a count of first attempts at problems. """
+class ProblemFirstFinalResponseAnswerDistribution(BaseProblemResponseAnswerDistribution):
+    """ Updated model for answer_distribution table with counts of first and final attempts at problems. """
 
     class Meta(BaseProblemResponseAnswerDistribution.Meta):
         verbose_name = 'first_last_answer_distribution'
