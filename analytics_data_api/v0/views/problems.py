@@ -7,13 +7,18 @@ from itertools import groupby
 from django.db import OperationalError
 from rest_framework import generics
 
-from analytics_data_api.v0.models import ProblemResponseAnswerDistribution, ProblemFirstFinalResponseAnswerDistribution
-from analytics_data_api.v0.serializers import ConsolidatedAnswerDistributionSerializer, \
-    ConsolidatedFirstFinalAnswerDistributionSerializer
-from analytics_data_api.v0.models import GradeDistribution
-from analytics_data_api.v0.serializers import GradeDistributionSerializer
-from analytics_data_api.v0.models import SequentialOpenDistribution
-from analytics_data_api.v0.serializers import SequentialOpenDistributionSerializer
+from analytics_data_api.v0.models import (
+    GradeDistribution,
+    ProblemResponseAnswerDistribution,
+    ProblemFirstFinalResponseAnswerDistribution,
+    SequentialOpenDistribution,
+)
+from analytics_data_api.v0.serializers import (
+    ConsolidatedAnswerDistributionSerializer,
+    ConsolidatedFirstFinalAnswerDistributionSerializer,
+    GradeDistributionSerializer,
+    SequentialOpenDistributionSerializer,
+)
 from analytics_data_api.utils import consolidate_answers
 
 
