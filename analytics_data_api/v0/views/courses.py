@@ -670,3 +670,142 @@ GROUP BY module_id;
                 row['created'] = datetime.datetime.strptime(created, '%Y-%m-%d %H:%M:%S.%f')
 
         return rows
+
+
+class CourseVideoListView(BaseCourseView):
+    """
+    Gets a summary of all videos tracked for a given course.
+
+    If a start and end date are specified, returns the summary data
+    aggregated between those start dates.
+
+    If no start and end date are specified, returns the summary data
+    aggregated across all logs.
+
+    **Example request**
+
+        GET /api/v0/courses/{course_id}/videos/
+
+    **Response Values**
+
+        Returns a collection of videos with activity and number of unique users
+        for each video. Each row in the collection contains:
+
+            * video_id: The video ID of the problem.
+            * total_activity: Number of play actions on that video.
+            * unique_users: Number of unique users for that video.
+    """
+    serializer_class = serializers.ProblemSerializer
+    allow_empty = False
+
+    def get_queryset(self):
+        sql = """
+SELECT
+    video_id,
+    SUM(total_activity) AS total_activity,
+    SUM(unique_users) AS unique_users,
+FROM course_video_summary
+WHERE course_id = %s
+GROUP BY video_id;
+        """
+        connection = connections[settings.ANALYTICS_DATABASE]
+        with connection.cursor() as cursor:
+            cursor.execute(sql, [self.course_id])
+            rows = dictfetchall(cursor)
+
+        for row in rows:
+            # Convert the aggregated decimal fields to integers
+            row['total_activity'] = int(row['total_activity'])
+            row['unique_users'] = int(row['unique_users'])
+
+        return rows
+
+
+class CourseVideoSeekTimesView(BaseCourseView):
+    """
+    Get the seek times for a given video in a given course.
+
+    **Example request**
+
+        GET /api/v0/courses/{course_id}/videos/
+
+    **Response Values**
+
+        Returns a collection of seek time intervals with information
+        about the interval. Each row in the collection contains:
+
+            * seek_interval: The start of that interval
+            * total_activity: Number of play actions on that video.
+            * unique_users: Number of unique users for that video.
+    """
+    serializer_class = serializers.ProblemSerializer
+    allow_empty = False
+
+    def get_queryset(self):
+        sql = """
+SELECT
+    seek_interval,
+    SUM(total_activity) AS total_activity,
+FROM course_video_seek_times
+WHERE course_id = %s
+    AND video_id = %s
+GROUP BY seek_interval;
+        """
+        connection = connections[settings.ANALYTICS_DATABASE]
+        with connection.cursor() as cursor:
+            cursor.execute(sql, [self.course_id, self.video_id])
+            rows = dictfetchall(cursor)
+
+        for row in rows:
+            # Convert the aggregated decimal fields to integers
+            row['seek_interval'] = int(row['seek_interval'])
+            row['total_activity'] = int(row['total_activity'])
+
+        return rows
+
+class OnCampusStudentDataView(BaseCourseView):
+    """
+    Gets a collection of data for a course that happens on-campus.
+
+    **Example request**
+
+        GET /api/v0/courses/{course_id}/video
+
+    **Response Values**
+
+        Returns a collection of user data. Each row contains:
+
+            * username: The user's username
+            * num_videos_watched: Number of total videos watched.
+            * total_time_spent: Time spent watching a video
+    """
+    serializer_class = serializers.ProblemSerializer
+    allow_empty = False
+
+    def get_queryset(self):
+        sql = """
+SELECT
+    username,
+    SUM(unique_videos_watched) as num_videos_watched,
+    SUM(total_activity) as total_activity,
+    SUM(total_time_spent) as total_time_spent
+FROM user_video_summary
+WHERE course_id = %s
+GROUP BY module_id;
+        """
+        connection = connections[settings.ANALYTICS_DATABASE]
+        with connection.cursor() as cursor:
+            cursor.execute(sql, [self.course_id])
+            rows = dictfetchall(cursor)
+
+        for row in rows:
+            # Convert the aggregated decimal fields to integers
+            row['total_submissions'] = int(row['total_submissions'])
+            row['correct_submissions'] = int(row['correct_submissions'])
+
+            # Rather than write custom SQL for the SQLite backend, simply parse the timestamp.
+            created = row['created']
+            if not isinstance(created, datetime.datetime):
+                row['created'] = datetime.datetime.strptime(created, '%Y-%m-%d %H:%M:%S.%f')
+
+        return rows
