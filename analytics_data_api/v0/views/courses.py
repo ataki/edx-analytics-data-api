@@ -704,7 +704,7 @@ class CourseVideoListView(BaseCourseView):
 SELECT
     video_id,
     SUM(total_activity) AS total_activity,
-    SUM(unique_users) AS unique_users,
+    SUM(unique_users) AS unique_users
 FROM course_video_summary
 WHERE course_id = %s
 GROUP BY video_id;
@@ -744,12 +744,16 @@ class CourseVideoSeekTimesView(BaseCourseView):
     serializer_class = serializers.CourseVideoSeekTimesSerializer
     allow_empty = False
 
+    def get(self, request, *args, **kwargs):
+        self.video_id = self.kwargs.get('video_id')
+        return super(CourseVideoSeekTimesView, self).get(request, *args, **kwargs)
+
     def get_queryset(self):
         sql = """
 SELECT
     seek_interval,
-    SUM(total_activity) AS total_activity,
-    AVG(unique_users) AS unique_users
+    SUM(num_seeks) AS total_activity,
+    AVG(num_users) AS unique_daily_users
 FROM course_video_seek_times
 WHERE course_id = %s
     AND video_id = %s
@@ -761,7 +765,7 @@ GROUP BY seek_interval;
             rows = dictfetchall(cursor)
 
         # return api results ordered by seek time
-        rows = sorted(rows, itemgetter(0))
+        rows = sorted(rows, key=itemgetter('seek_interval'))
 
         for row in rows:
             # Convert the aggregated decimal fields to integers
@@ -784,8 +788,9 @@ class OnCampusStudentDataView(BaseCourseView):
         Returns a collection of user data. Each row contains:
 
             * username: The user's username
-            * num_videos_watched: Number of total videos watched.
-            * total_video_watch_time: Time spent watching a video
+            * unique_videos_watched: Number of total videos watched.
+            * total_activity: Number of video plays
+            * total_video_watch_time: Estimated time spent watching videos.
     """
     serializer_class = serializers.OnCampusStudentDataSerializer
     allow_empty = False
@@ -794,21 +799,24 @@ class OnCampusStudentDataView(BaseCourseView):
         sql = """
 SELECT
     username,
-    SUM(unique_videos_watched) as num_videos_watched,
+    SUM(unique_videos_watched) as unique_videos_watched,
     SUM(total_activity) as total_activity,
     SUM(total_time_spent) as total_video_watch_time
 FROM user_video_summary
 WHERE course_id = %s
-GROUP BY module_id;
+GROUP BY username;
         """
         connection = connections[settings.ANALYTICS_DATABASE]
         with connection.cursor() as cursor:
             cursor.execute(sql, [self.course_id])
             rows = dictfetchall(cursor)
 
+        # return api results ordered by something useful
+        rows = sorted(rows, key=itemgetter('total_activity'))
+
         for row in rows:
             # Convert the aggregated decimal fields to integers
-            row['num_videos_watched'] = int(row['num_videos_watched'])
+            row['unique_videos_watched'] = int(row['unique_videos_watched'])
             row['total_activity'] = int(row['total_activity'])
             row['total_video_watch_time'] = int(row['total_video_watch_time'])
 

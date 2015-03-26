@@ -78,7 +78,7 @@ class OnCampusStudentDataSerializer(serializers.Serializer):
     """
 
     username = serializers.CharField(required=True)
-    num_videos_watched = serializers.IntegerField(default=0)
+    unique_videos_watched = serializers.IntegerField(default=0)
     total_video_watch_time = serializers.IntegerField(default=0)
 
 
