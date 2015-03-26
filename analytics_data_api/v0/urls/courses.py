@@ -18,7 +18,7 @@ COURSE_URLS = [
 ]
 
 # TODO Check correctness of video id regex
-COURSE_VIDEO_ID_PATTERN = r'(?P<video_id>[A-Za-z0-9\-]+[^/]+'
+COURSE_VIDEO_ID_PATTERN = r'(?P<video_id>[A-Za-z0-9\-]+[^/]+)'
 COURSE_VIDEO_URLS = [
     ('seek_times', views.CourseVideoSeekTimesView, 'course_video_seek_times'),
 ]

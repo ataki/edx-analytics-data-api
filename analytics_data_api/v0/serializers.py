@@ -51,6 +51,37 @@ class ProblemSerializer(serializers.Serializer):
     created = serializers.DateTimeField(format=settings.DATETIME_FORMAT)
 
 
+class CourseVideoListSerializer(serializers.Serializer):
+    """
+    Serializer for course video summary
+    """
+
+    video_id = serializers.CharField(required=True)
+    total_activity = serializers.IntegerField(default=0)
+    unique_users = serializers.IntegerField(default=0)
+    created = serializers.DateTimeField(format=settings.DATETIME_FORMAT)
+
+
+class CourseVideoSeekTimesSerializer(serializers.Serializer):
+    """
+    Serializer for a seek time entry for a given video
+    """
+
+    seek_interval = serializers.IntegerField(required=True)
+    total_activity = serializers.IntegerField(default=0)
+    unique_daily_users = serializers.IntegerField(default=0)
+
+
+class OnCampusStudentDataSerializer(serializers.Serializer):
+    """
+    Serializer for a row of on-campus student information
+    """
+
+    username = serializers.CharField(required=True)
+    num_videos_watched = serializers.IntegerField(default=0)
+    total_video_watch_time = serializers.IntegerField(default=0)
+
+
 class ProblemResponseAnswerDistributionSerializer(ModelSerializerWithCreatedField):
     """
     Representation of the Answer Distribution table, without id.

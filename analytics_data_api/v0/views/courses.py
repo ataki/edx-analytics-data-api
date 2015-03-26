@@ -1,5 +1,6 @@
 import datetime
 from itertools import groupby
+from operator import itemgetter
 import warnings
 
 from django.conf import settings
@@ -695,7 +696,7 @@ class CourseVideoListView(BaseCourseView):
             * total_activity: Number of play actions on that video.
             * unique_users: Number of unique users for that video.
     """
-    serializer_class = serializers.ProblemSerializer
+    serializer_class = serializers.CourseVideoListSerializer
     allow_empty = False
 
     def get_queryset(self):
@@ -731,14 +732,16 @@ class CourseVideoSeekTimesView(BaseCourseView):
 
     **Response Values**
 
-        Returns a collection of seek time intervals with information
+        Returns a sorted collection of seek time intervals with information
         about the interval. Each row in the collection contains:
 
-            * seek_interval: The start of that interval
+            * seek_interval: Target time (in seconds)
+                that the user seeked to.
             * total_activity: Number of play actions on that video.
-            * unique_users: Number of unique users for that video.
+            * unique_daily_users: Average number of unique viewers for that video
+                per day.
     """
-    serializer_class = serializers.ProblemSerializer
+    serializer_class = serializers.CourseVideoSeekTimesSerializer
     allow_empty = False
 
     def get_queryset(self):
@@ -746,6 +749,7 @@ class CourseVideoSeekTimesView(BaseCourseView):
 SELECT
     seek_interval,
     SUM(total_activity) AS total_activity,
+    AVG(unique_users) AS unique_users
 FROM course_video_seek_times
 WHERE course_id = %s
     AND video_id = %s
@@ -756,10 +760,14 @@ GROUP BY seek_interval;
             cursor.execute(sql, [self.course_id, self.video_id])
             rows = dictfetchall(cursor)
 
+        # return api results ordered by seek time
+        rows = sorted(rows, itemgetter(0))
+
         for row in rows:
             # Convert the aggregated decimal fields to integers
             row['seek_interval'] = int(row['seek_interval'])
             row['total_activity'] = int(row['total_activity'])
+            row['unique_daily_users'] = int(row['unique_daily_users'])
 
         return rows
 
@@ -777,9 +785,9 @@ class OnCampusStudentDataView(BaseCourseView):
 
             * username: The user's username
             * num_videos_watched: Number of total videos watched.
-            * total_time_spent: Time spent watching a video
+            * total_video_watch_time: Time spent watching a video
     """
-    serializer_class = serializers.ProblemSerializer
+    serializer_class = serializers.OnCampusStudentDataSerializer
     allow_empty = False
 
     def get_queryset(self):
@@ -788,7 +796,7 @@ SELECT
     username,
     SUM(unique_videos_watched) as num_videos_watched,
     SUM(total_activity) as total_activity,
-    SUM(total_time_spent) as total_time_spent
+    SUM(total_time_spent) as total_video_watch_time
 FROM user_video_summary
 WHERE course_id = %s
 GROUP BY module_id;
@@ -800,12 +808,8 @@ GROUP BY module_id;
 
         for row in rows:
             # Convert the aggregated decimal fields to integers
-            row['total_submissions'] = int(row['total_submissions'])
-            row['correct_submissions'] = int(row['correct_submissions'])
-
-            # Rather than write custom SQL for the SQLite backend, simply parse the timestamp.
-            created = row['created']
-            if not isinstance(created, datetime.datetime):
-                row['created'] = datetime.datetime.strptime(created, '%Y-%m-%d %H:%M:%S.%f')
+            row['num_videos_watched'] = int(row['num_videos_watched'])
+            row['total_activity'] = int(row['total_activity'])
+            row['total_video_watch_time'] = int(row['total_video_watch_time'])
 
         return rows
