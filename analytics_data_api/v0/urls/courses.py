@@ -12,9 +12,9 @@ COURSE_URLS = [
     ('enrollment/education', views.CourseEnrollmentByEducationView, 'enrollment_by_education'),
     ('enrollment/gender', views.CourseEnrollmentByGenderView, 'enrollment_by_gender'),
     ('enrollment/location', views.CourseEnrollmentByLocationView, 'enrollment_by_location'),
-    ('problems', views.ProblemsListView, 'problems'),
     ('videos', views.CourseVideoListView, 'videos'),
     ('on_campus_student_data', views.OnCampusStudentDataView, 'on_campus_student_data'),
+    ('problems', views.ProblemsListView, 'problems')
 ]
 
 # TODO Check correctness of video id regex
