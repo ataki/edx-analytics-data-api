@@ -695,6 +695,21 @@ class CourseVideoListView(BaseCourseView):
             * video_id: The video ID of the problem.
             * total_activity: Number of play actions on that video.
             * unique_users: Number of unique users for that video.
+
+    **Parameters**
+
+        You can specify the start and end dates for the time period for which
+        you want to get activity.
+
+        You specify dates in the format: YYYY-mm-ddTtttttt; for example,
+        ``2014-12-15T000000``.
+
+        If no start or end dates are specified, the data for the week ending on
+        the previous day is returned.
+
+        start_date -- Date after which all data is returned (inclusive).
+
+        end_date -- Date before which all data is returned (exclusive).
     """
     serializer_class = serializers.CourseVideoListSerializer
     allow_empty = False
@@ -707,11 +722,19 @@ SELECT
     SUM(unique_users) AS unique_users
 FROM course_video_summary
 WHERE course_id = %s
+AND date >= %s
+AND date <= %s
 GROUP BY video_id;
         """
+
+        if not self.start_date:
+            self.start_date = datetime.datetime.utcfromtimestamp(0)
+        if not self.end_date:
+            self.end_date = datetime.datetime.now()
+
         connection = connections[settings.ANALYTICS_DATABASE]
         with connection.cursor() as cursor:
-            cursor.execute(sql, [self.course_id])
+            cursor.execute(sql, [self.course_id, self.start_date, self.end_date])
             rows = dictfetchall(cursor)
 
         for row in rows:
@@ -728,7 +751,7 @@ class CourseVideoSeekTimesView(BaseCourseView):
 
     **Example request**
 
-        GET /api/v0/courses/{course_id}/videos/
+        GET /api/v0/courses/{course_id}/videos/{video_id}/seek_times
 
     **Response Values**
 
@@ -740,11 +763,27 @@ class CourseVideoSeekTimesView(BaseCourseView):
             * total_activity: Number of play actions on that video.
             * unique_daily_users: Average number of unique viewers for that video
                 per day.
+
+    **Parameters**
+
+        You can specify the start and end dates for the time period for which
+        you want to get activity.
+
+        You specify dates in the format: YYYY-mm-dd; for example,
+        `2014-12-15`.
+
+        If no start or end dates are specified, the data for the week ending on
+        the previous day is returned.
+
+        start_date -- Date after which all data is returned (inclusive).
+
+        end_date -- Date before which all data is returned (exclusive).
     """
     serializer_class = serializers.CourseVideoSeekTimesSerializer
     allow_empty = False
 
     def get(self, request, *args, **kwargs):
+        #pylint: disable=attribute-defined-outside-init
         self.video_id = self.kwargs.get('video_id')
         return super(CourseVideoSeekTimesView, self).get(request, *args, **kwargs)
 
@@ -757,11 +796,19 @@ SELECT
 FROM course_video_seek_times
 WHERE course_id = %s
     AND video_id = %s
+    AND date >= %s
+    AND date <= %s
 GROUP BY seek_interval;
         """
+
+        if not self.start_date:
+            self.start_date = datetime.datetime.utcfromtimestamp(0)
+        if not self.end_date:
+            self.end_date = datetime.datetime.now()
+
         connection = connections[settings.ANALYTICS_DATABASE]
         with connection.cursor() as cursor:
-            cursor.execute(sql, [self.course_id, self.video_id])
+            cursor.execute(sql, [self.course_id, self.video_id, self.start_date, self.end_date])
             rows = dictfetchall(cursor)
 
         # return api results ordered by seek time
@@ -781,7 +828,7 @@ class OnCampusStudentDataView(BaseCourseView):
 
     **Example request**
 
-        GET /api/v0/courses/{course_id}/video
+        GET /api/v0/courses/{course_id}/on_campus_student_data/
 
     **Response Values**
 
@@ -791,6 +838,21 @@ class OnCampusStudentDataView(BaseCourseView):
             * unique_videos_watched: Number of total videos watched.
             * total_activity: Number of video plays
             * total_video_watch_time: Estimated time spent watching videos.
+
+    **Parameters**
+
+        You can specify the start and end dates for the time period for which
+        you want to get activity.
+
+        You specify dates in the format: YYYY-mm-ddTtttttt; for example,
+        ``2014-12-15T000000``.
+
+        If no start or end dates are specified, the data for the week ending on
+        the previous day is returned.
+
+        start_date -- Date after which all data is returned (inclusive).
+
+        end_date -- Date before which all data is returned (exclusive).
     """
     serializer_class = serializers.OnCampusStudentDataSerializer
     allow_empty = False
@@ -804,11 +866,19 @@ SELECT
     SUM(total_time_spent) as total_video_watch_time
 FROM user_video_summary
 WHERE course_id = %s
+    AND date >= %s
+    AND date <= %s
 GROUP BY username;
         """
+
+        if not self.start_date:
+            self.start_date = datetime.datetime.utcfromtimestamp(0)
+        if not self.end_date:
+            self.end_date = datetime.datetime.now()
+
         connection = connections[settings.ANALYTICS_DATABASE]
         with connection.cursor() as cursor:
-            cursor.execute(sql, [self.course_id])
+            cursor.execute(sql, [self.course_id, self.start_date, self.end_date])
             rows = dictfetchall(cursor)
 
         # return api results ordered by something useful
