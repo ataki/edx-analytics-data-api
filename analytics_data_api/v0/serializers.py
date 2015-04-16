@@ -53,13 +53,21 @@ class ProblemSerializer(serializers.Serializer):
 
 class CourseVideoListSerializer(serializers.Serializer):
     """
-    Serializer for course video summary
+    Serializer for course video list endpoint
     """
 
     video_id = serializers.CharField(required=True)
     total_activity = serializers.IntegerField(default=0)
     unique_users = serializers.IntegerField(default=0)
-    created = serializers.DateTimeField(format=settings.DATETIME_FORMAT)
+
+
+class CourseVideoSerializer(serializers.Serializer):
+    """
+    Serializer for course video detail endpoint
+    """
+
+    total_activity = serializers.IntegerField(default=0)
+    unique_users = serializers.IntegerField(default=0)
 
 
 class CourseVideoSeekTimesSerializer(serializers.Serializer):
@@ -78,6 +86,7 @@ class OnCampusStudentDataSerializer(serializers.Serializer):
     """
 
     username = serializers.CharField(required=True)
+    total_video_activity = serializers.IntegerField(default=0)
     unique_videos_watched = serializers.IntegerField(default=0)
     total_video_watch_time = serializers.IntegerField(default=0)
 

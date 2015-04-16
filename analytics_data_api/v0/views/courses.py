@@ -704,8 +704,8 @@ class CourseVideoListView(BaseCourseView):
         You specify dates in the format: YYYY-mm-ddTtttttt; for example,
         ``2014-12-15T000000``.
 
-        If no start or end dates are specified, the data for the week ending on
-        the previous day is returned.
+        If no start or end dates are specified, the dates default to starting
+        from the beginning of time and ending at today
 
         start_date -- Date after which all data is returned (inclusive).
 
@@ -743,6 +743,126 @@ GROUP BY video_id;
             row['unique_users'] = int(row['unique_users'])
 
         return rows
+
+
+class CourseVideoSummaryView(generics.RetrieveAPIView):
+    """
+    Gets a summary of a single video inside the course identified by
+    a given course_id.
+
+    If a start and end date are specified, returns the summary data
+    aggregated between those start dates.
+
+    If no start and end date are specified, returns the summary data
+    aggregated across all logs.
+
+    Raises a 404 NotFound if the video_id is not within the course
+    with the given course_id.
+
+    **Example request**
+
+        GET /api/v0/courses/{course_id}/videos/{video_id}/
+
+    **Response Values**
+
+        Returns a collection of videos with activity and number of unique users
+        for each video. Each row in the collection contains:
+
+            * total_activity: Number of play actions on that video.
+            * unique_users: Number of unique users for that video.
+
+    **Parameters**
+
+        You can specify the start and end dates for the time period for which
+        you want to get activity.
+
+        You specify dates in the format: YYYY-mm-ddTtttttt; for example,
+        ``2014-12-15T000000``.
+
+        If no start or end dates are specified, the dates default to starting
+        from the beginning of time and ending at today
+
+        start_date -- Date after which all data is returned (inclusive).
+
+        end_date -- Date before which all data is returned (exclusive).
+    """
+
+    serializer_class = serializers.CourseVideoSerializer
+    allow_empty = False
+
+    start_date = None
+    end_date = None
+    course_id = None
+    video_id = None
+
+
+    def get(self, request, *args, **kwargs):
+        self.course_id = self.kwargs.get('course_id')
+        self.video_id = self.kwargs.get('video_id')
+        start_date = request.QUERY_PARAMS.get('start_date')
+        end_date = request.QUERY_PARAMS.get('end_date')
+        timezone = utc
+
+        if start_date:
+            start_date = datetime.datetime.strptime(start_date, settings.DATE_FORMAT)
+            start_date = make_aware(start_date, timezone)
+
+        if end_date:
+            end_date = datetime.datetime.strptime(end_date, settings.DATE_FORMAT)
+            end_date = make_aware(end_date, timezone)
+
+        self.start_date = start_date
+        self.end_date = end_date
+
+        return super(CourseVideoSummaryView, self).get(request, *args, **kwargs)
+
+    def get_object(self, queryset=None):
+        sql = """
+SELECT
+    SUM(total_activity) AS total_activity,
+    SUM(unique_users) AS unique_users,
+    COUNT(*) as num_rows
+FROM course_video_summary
+WHERE course_id = %s
+AND video_id = %s
+AND date >= %s
+AND date <= %s
+GROUP BY video_id;
+        """
+
+        if not self.start_date:
+            self.start_date = datetime.datetime.utcfromtimestamp(0)
+        if not self.end_date:
+            self.end_date = datetime.datetime.now()
+
+        connection = connections[settings.ANALYTICS_DATABASE]
+        with connection.cursor() as cursor:
+            cursor.execute(sql, [
+                self.course_id,
+                self.video_id,
+                self.start_date,
+                self.end_date,
+            ])
+            rows = dictfetchall(cursor)
+
+        # we want to make sure that the video_id is present within the
+        # course, but the base query is an aggregation. Therefore, we
+        # rely on a row count to determine whether to report an error
+        # if the video is not in this course
+
+        if len(rows) == 0:
+            raise Http404
+
+        row = rows[0]
+        row_agg_count = int(row['num_rows'])
+
+        if row_agg_count == 0:
+            raise Http404
+
+        # Convert the aggregated decimal fields to integers
+        row['total_activity'] = int(row['total_activity'])
+        row['unique_users'] = int(row['unique_users'])
+        return row
 
 
 class CourseVideoSeekTimesView(BaseCourseView):
@@ -822,6 +942,7 @@ GROUP BY seek_interval;
 
         return rows
 
+
 class OnCampusStudentDataView(BaseCourseView):
     """
     Gets a collection of data for a course that happens on-campus.
@@ -862,7 +983,7 @@ class OnCampusStudentDataView(BaseCourseView):
 SELECT
     username,
     SUM(unique_videos_watched) as unique_videos_watched,
-    SUM(total_activity) as total_activity,
+    SUM(total_activity) as total_video_activity,
     SUM(total_time_spent) as total_video_watch_time
 FROM user_video_summary
 WHERE course_id = %s
@@ -882,12 +1003,12 @@ GROUP BY username;
             rows = dictfetchall(cursor)
 
         # return api results ordered by something useful
-        rows = sorted(rows, key=itemgetter('total_activity'))
+        rows = sorted(rows, key=itemgetter('total_video_activity'))
 
         for row in rows:
             # Convert the aggregated decimal fields to integers
             row['unique_videos_watched'] = int(row['unique_videos_watched'])
-            row['total_activity'] = int(row['total_activity'])
+            row['total_video_activity'] = int(row['total_video_activity'])
             row['total_video_watch_time'] = int(row['total_video_watch_time'])
 
         return rows
