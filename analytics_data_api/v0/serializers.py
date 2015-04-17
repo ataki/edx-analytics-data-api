@@ -91,6 +91,16 @@ class OnCampusStudentDataSerializer(serializers.Serializer):
     total_video_watch_time = serializers.IntegerField(default=0)
 
 
+class CourseVideoSettingsSerializer(serializers.Serializer):
+    """
+    Serializer for a row of on-campus student information
+    """
+
+    name = serializers.CharField(required=True)
+    type = serializers.CharField(required=True)
+    value = serializers.CharField(required=True)
+
+
 class ProblemResponseAnswerDistributionSerializer(ModelSerializerWithCreatedField):
     """
     Representation of the Answer Distribution table, without id.

@@ -642,3 +642,62 @@ class CourseProblemsListViewTests(DemoCourseMixin, TestCaseWithAuthentication):
 
         response = self._get_data('foo/bar/course')
         self.assertEquals(response.status_code, 404)
+
+
+class CourseVideoSummaryView(DemoCourseMixin, TestCaseWithAuthentication):
+    def _get_data(self, course_id=None, video_id):
+        """
+        Retrieve data for the specified course.
+        """
+
+        course_id = course_id or self.course_id
+        video_id = video_id or self.video_id
+        url = '/api/v0/courses/{}/problems/'.format(course_id)
+        return self.authenticated_get(url)
+
+    def test_get(self):
+        """
+        The view should return data when data exists for the course.
+        """
+
+        G(models.CourseVideoSummary)
+
+        created = datetime.datetime.utcnow()
+
+        # raw objects inserted
+        raw_data = []
+        dates = [datetime.datetime(2012, 12, 1), datetime.datetime(2013, 12, 1), datetime.datetime(2014, 12, 1)]
+
+        for date in dates:
+            row = G(models.CourseVideoSummary, course_id=self.course_id, video_id=video_id, total_activity=100,
+               unique_users=100, created=created)
+            raw_data.append(rows)
+
+        expected = [
+            {
+                'self.course_id': self.course_id,
+                'self.video_id': self.video_id,
+                'total_activity': 300,
+                'unique_users': 300,
+                'created': created.strftime(settings.DATETIME_FORMAT)
+            },
+        ]
+
+        response = self._get_data(self.course_id)
+        self.assertEquals(response.status_code, 200)
+        self.assertListEqual(response.data, expected)
+
+    def test_get_404(self):
+        """
+        The view should return 404 if no data exists for the course.
+        """
+
+        response = self._get_data('foo/bar/course')
+        self.assertEquals(response.status_code, 404)
+
+    def test_get_with_start_end(self):
+        """
+        Docstring
+        """
+        pass
+

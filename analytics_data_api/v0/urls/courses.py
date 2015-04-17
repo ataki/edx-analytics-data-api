@@ -14,6 +14,7 @@ COURSE_URLS = [
     ('enrollment/location', views.CourseEnrollmentByLocationView, 'enrollment_by_location'),
     ('videos', views.CourseVideoListView, 'videos'),
     ('on_campus_student_data', views.OnCampusStudentDataView, 'on_campus_student_data'),
+    ('videos/settings', views.CourseVideoSettingsView, 'videos_settings'),
     ('problems', views.ProblemsListView, 'problems')
 ]
 

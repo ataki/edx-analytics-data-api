@@ -152,3 +152,58 @@ class SequentialOpenDistribution(models.Model):
     course_id = models.CharField(db_index=True, max_length=255)
     count = models.IntegerField()
     created = models.DateTimeField(auto_now_add=True)
+
+
+class CourseVideoSummary(models.Model):
+    """ Each row stores the count of a particular grade on a module for a given course. """
+
+    class Meta(object):
+        db_table = 'course_video_summary'
+
+    course_id = models.CharField(db_index=True, max_length=255)
+    video_id = models.CharField(db_index=True, max_length=255)
+    total_activity = models.IntegerField()
+    unique_users = models.IntegerField()
+    created = models.DateTimeField(auto_now_add=True)
+
+
+class CourseVideoSeekTimes(models.Model):
+    """ Each row stores the count of a particular grade on a module for a given course. """
+
+    class Meta(object):
+        db_table = 'course_video_seek_times'
+
+    course_id = models.CharField(db_index=True, max_length=255)
+    video_id = models.CharField(db_index=True, max_length=255)
+    date = models.DateTimeField(db_index=True)
+    seek_interval = models.IntegerField()
+    num_seeks = models.IntegerField()
+    num_users = models.IntegerField()
+    created = models.DateTimeField(auto_now_add=True)
+
+
+class UserVideoSummary(models.Model):
+    """ Each row stores the count of a particular grade on a module for a given course. """
+
+    class Meta(object):
+        db_table = 'user_video_summary'
+
+    course_id = models.CharField(db_index=True, max_length=255)
+    username = models.CharField(db_index=True, max_length=255)
+    date = models.DateTimeField(db_index=True)
+    total_activity = models.IntegerField()
+    unique_videos_watched = models.IntegerField()
+    total_time_spent = models.IntegerField()
+    created = models.DateTimeField(auto_now_add=True)
+
+
+class CourseVideoSettings(models.Model):
+    """ Each row stores a setting from the pipeline """
+
+    class Meta(object):
+        db_table = 'course_video_settings'
+
+    name = models.CharField(max_length=255)
+    type = models.CharField(max_length=255)
+    value = models.CharField(max_length=255)
+    created = models.DateTimeField(auto_now_add=True)

@@ -1012,3 +1012,24 @@ GROUP BY username;
             row['total_video_watch_time'] = int(row['total_video_watch_time'])
 
         return rows
+
+
+class CourseVideoSettingsView(generics.ListAPIView):
+    """
+    Gets settings about course video information.
+
+    **Example request**
+
+        GET /api/v0/courses/{course_id}/videos/settings
+
+    **Response Values**
+
+        Returns a collection of video api data. Each row contains:
+
+            * name: The field's name
+            * type: A capitalized datatype (e.g. INTEGER|FLOAT|STRING)
+            * value: The value in string format
+    """
+    serializer_class = serializers.CourseVideoSettingsSerializer
+    allow_empty = False
+    model = models.CourseVideoSettings
